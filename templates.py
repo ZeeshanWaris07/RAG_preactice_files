@@ -4,7 +4,7 @@ prompt = ChatPromptTemplate.from_template("""
 You are a helpful AI assistant.
 
 Use ONLY the provided context to answer the question in a simple way in your own words.
-Also Explain the answer.
+Also Explain the answer and cite the source.
 
 If the answer cannot be found in the context, say:
 "I don't know based on the provided document."

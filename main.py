@@ -8,9 +8,26 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.messages import AIMessage,HumanMessage
 from dotenv import load_dotenv
+from templates import prompt , rewrite_prompt
 import os
 load_dotenv()
 
+def format_docs(docs):
+
+    context = []
+
+    for doc in docs:
+
+        context.append(
+            f"""
+Source: {doc.metadata['source']}
+Page: {doc.metadata['page']}
+
+{doc.page_content}
+"""
+        )
+
+    return "\n\n".join(context)
 
 def load_documents(folder_name = "data"):
 
@@ -70,4 +87,45 @@ retriever = vector_store.as_retriever(
 llm = ChatGoogleGenerativeAI(
     model = "gemini-3.6-flash"
 )
+
+
+chat_history = []
+
+rewrite_chain = (
+    rewrite_prompt
+    | llm
+    | StrOutputParser()
+)
+
+rag_chain = (
+    {
+        "context" : retriever | format_docs,
+        "question" : RunnablePassthrough()
+    }
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+
+while(True):
+    choice = input("chat or exit")
+    if choice == "exit":
+        break
+    else:
+        question = input("What is your question?")
+        updated_question = rewrite_chain.invoke({
+            "chat_history" : chat_history,
+            "question" : question
+        })
+
+        print(f"Question : {question}")
+        print(f"Updated Question : {updated_question}")
+
+        response = rag_chain.invoke(updated_question)
+
+        print(f"Response : {response}")
+
+        chat_history.append(HumanMessage(content = question))
+        chat_history.append(AIMessage(content = response))
+
 
