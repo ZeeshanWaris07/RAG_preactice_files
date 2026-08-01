@@ -31,3 +31,18 @@ Do not answer it.
 Question:
 {question}
 """)
+
+topic_prompt = ChatPromptTemplate.from_template("""
+You are a classifier.
+
+Possible topics:
+
+- artificial intelligence
+- machine learning
+- deep learning
+
+Return ONLY one topic.
+
+Question:
+{question}
+""")
