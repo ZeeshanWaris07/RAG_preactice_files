@@ -46,3 +46,39 @@ Return ONLY one topic.
 Question:
 {question}
 """)
+
+metadata_prompt = ChatPromptTemplate.from_template("""
+You are an expert at classifying document chunks.
+
+Analyze the following text and extract:
+
+- topic
+- subtopic
+- difficulty (Beginner, Intermediate, Advanced)
+
+Text:
+{text}
+""")
+
+retrieval_prompt = ChatPromptTemplate.from_template("""
+    You are a search assistant.
+
+Given the user's question, extract:
+
+- the semantic search query
+- any metadata filters
+
+Return:
+
+{{
+  "query": "...",
+  "topic": "...",
+  "subtopic": "...",
+  "difficulty": "..."
+}}
+
+If a field is not mentioned, leave it null.
+
+Question:
+{question}
+""")
