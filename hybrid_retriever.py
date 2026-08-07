@@ -53,6 +53,7 @@ bm25_retreiver = BM25Retriever.from_documents(
 
 hybrid_retriever = EnsembleRetriever(
     retrievers = [chunk_retriever, bm25_retreiver],
+    weights = [0.6, 0.4]
 )
 
 llm = ChatGoogleGenerativeAI(
