@@ -7,10 +7,31 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.messages import AIMessage,HumanMessage
-from langchain_community.retrievers import BM25Retriever , EnsembleRetriever
+from langchain_community.retrievers import BM25Retriever
+from langchain_classic.retrievers import EnsembleRetriever
+from sentence_transformers import CrossEncoder
 from dotenv import load_dotenv
 import os
 load_dotenv()
+
+def make_pairs(question,docs):
+    pairs = []
+
+    for doc in docs:
+        pairs.append((question, doc.page_content))
+
+    return pairs
+
+def make_reranked_docs(scores,docs):
+    reranked_docs = sorted(
+        zip(scores,docs),
+        key = lambda x : x[0],
+        reverse = True
+    )
+
+    return reranked_docs
+
+    
 
 loader = PyPDFLoader('data/d2l-en.pdf')
 docs = loader.load()
@@ -60,3 +81,25 @@ llm = ChatGoogleGenerativeAI(
     model = "gemini-3.6-flash"
 )
 
+reranker = CrossEncoder(
+    "BAAI/bge-reranker-base"
+)
+
+question = "Explain Max Pooling in Deep Learning"
+
+retrieved_documents = hybrid_retriever.invoke(question)
+
+for doc in retrieved_documents:
+    print(f"Document : {doc.metadata['source']}")
+    print(f"Content : {doc.page_content}")
+    print("--------------------------------------------------")
+
+pairs = make_pairs(question, retrieved_documents)
+scores = reranker.predict(pairs)
+
+reranked_docs = make_reranked_docs(scores, retrieved_documents)
+for score,doc in reranked_docs:
+    print(f"Document : {doc.metadata['source']}")
+    print(f"Content : {doc.page_content}")
+    print(f"Reranking Score : {score}")
+    print("--------------------------------------------------")
